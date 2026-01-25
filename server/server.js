@@ -30,6 +30,7 @@ app.get("/", (req, res) => {
 
 const rooms = new Map(); // Map to store room data: { members: [socket.id], networkControllerIds: Map(socket.id -> networkControllerId), nextNetworkControllerId: number }
 const nicknames = new Map(); // Map to store socket.id -> nickname mappings
+const avatarGuids = new Map(); // Map to store socket.id -> avatarGuid mappings
 const userRooms = new Map(); // Map to store socket.id -> current room
 
 io.on("connection", (socket) => {
@@ -42,6 +43,16 @@ io.on("connection", (socket) => {
       console.log(`Nickname set for ${socket.id}: ${nickname}`);
     } else {
       console.log(`Invalid nickname received from ${socket.id}`);
+    }
+  });
+
+  // Handle avatar setup
+  socket.on('setAvatar', (avatarGuid) => {
+    if (typeof avatarGuid === 'string' && avatarGuid.trim()) {
+      avatarGuids.set(socket.id, avatarGuid.trim());
+      console.log(`avatarGuid set for ${socket.id}: ${avatarGuid}`);
+    } else {
+      console.log(`Invalid avatarGuid received from ${socket.id}`);
     }
   });
 
@@ -116,6 +127,7 @@ io.on("connection", (socket) => {
     const memberData = roomData.members.map((id) => ({
       socketId: id,
       nickname: nicknames.get(id) || 'Unknown',
+      avatarGuid: avatarGuids.get(id) || null,
       networkControllerId: roomData.networkControllerIds.get(id)
     }));
     io.to(room).emit('update-room-members', room, memberData);
@@ -270,6 +282,7 @@ io.on("connection", (socket) => {
         const memberData = roomData.members.map((id) => ({
           socketId: id,
           nickname: nicknames.get(id) || 'Unknown',
+          avatarGuid: avatarGuids.get(id) || null,
           networkControllerId: roomData.networkControllerIds.get(id)
         }));
         io.to(room).emit('update-room-members', room, memberData);
@@ -282,6 +295,7 @@ io.on("connection", (socket) => {
     // Clean up user data
     userRooms.delete(socket.id);
     nicknames.delete(socket.id);
+    avatarGuids.delete(socket.id);
   });
   
   /*
