@@ -40,9 +40,9 @@ io.on("connection", (socket) => {
   socket.on('setNickname', (nickname) => {
     if (typeof nickname === 'string' && nickname.trim()) {
       nicknames.set(socket.id, nickname.trim());
-      console.log(`Nickname set for ${socket.id}: ${nickname}`);
+      console.log(`${socket.id} - setNickname ${nickname}`);
     } else {
-      console.log(`Invalid nickname received from ${socket.id}`);
+      console.log(`${socket.id} - Invalid nickname received`);
     }
   });
 
@@ -50,9 +50,9 @@ io.on("connection", (socket) => {
   socket.on('setAvatar', (avatarGuid) => {
     if (typeof avatarGuid === 'string' && avatarGuid.trim()) {
       avatarGuids.set(socket.id, avatarGuid.trim());
-      console.log(`avatarGuid set for ${socket.id}: ${avatarGuid}`);
+      console.log(`${socket.id} - setAvatar ${avatarGuid}`);
     } else {
-      console.log(`Invalid avatarGuid received from ${socket.id}`);
+      console.log(`${socket.id} - Invalid avatarGuid received`);
     }
   });
 
@@ -76,6 +76,7 @@ io.on("connection", (socket) => {
         const memberData = roomData.members.map((id) => ({
           socketId: id,
           nickname: nicknames.get(id) || 'Unknown',
+          avatarGuid: avatarGuids.get(id) || null,
           networkControllerId: roomData.networkControllerIds.get(id)
         }));
         io.to(currentRoom).emit('update-room-members', currentRoom, memberData);
@@ -117,6 +118,7 @@ io.on("connection", (socket) => {
     socket.to(room).emit('room-member-join', {
       socketId: socket.id,
       nickname: nicknames.get(socket.id) || 'Unknown',
+      avatarGuid: avatarGuids.get(socket.id) || null,
       networkControllerId: networkControllerId
     });
 
