@@ -40,6 +40,7 @@ io.on("connection", (socket) => {
   socket.on('setNickname', (nickname) => {
     if (typeof nickname === 'string' && nickname.trim()) {
       nicknames.set(socket.id, nickname.trim());
+      io.to(socket.id).emit('setNickname', nickname.trim());
       console.log(`${socket.id} - setNickname ${nickname}`);
     } else {
       console.log(`${socket.id} - Invalid nickname received`);
@@ -50,6 +51,7 @@ io.on("connection", (socket) => {
   socket.on('setAvatar', (avatarGuid) => {
     if (typeof avatarGuid === 'string' && avatarGuid.trim()) {
       avatarGuids.set(socket.id, avatarGuid.trim());
+      io.to(socket.id).emit('setAvatar', avatarGuid.trim());
       console.log(`${socket.id} - setAvatar ${avatarGuid}`);
     } else {
       console.log(`${socket.id} - Invalid avatarGuid received`);
