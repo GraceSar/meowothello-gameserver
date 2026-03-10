@@ -98,7 +98,8 @@ io.on("connection", (socket) => {
         // Emit room-member-left to the previous room (excluding the leaving user)
         socket.to(currentRoom).emit('room-member-left', {
           socketId: socket.id,
-          nickname: users.get(socket.id)?.nickname || "Unknown" //nicknames.get(socket.id) || 'Unknown'
+          //nickname: users.get(socket.id)?.nickname || "Unknown" //nicknames.get(socket.id) || 'Unknown'
+          userInfo: users.get(socket.id) || null
         });
         // Emit update-room-members to all clients in the previous room
         const memberData = roomData.members.map((id) => ({
@@ -313,7 +314,8 @@ io.on("connection", (socket) => {
         io.to(room).emit('room-member-left', {
           socketId: socket.id,
           //nickname: nicknames.get(socket.id) || 'Unknown'
-          nickname: users.get(socket.id)?.nickname || "Unknown"
+          //nickname: users.get(socket.id)?.nickname || "Unknown"
+          userInfo: users.get(socket.id) || null
         });
         // Emit update-room-members to all clients in the room
         const memberData = roomData.members.map((id) => ({
