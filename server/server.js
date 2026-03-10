@@ -59,7 +59,8 @@ io.on("connection", (socket) => {
   //   }
   // });
 
-  socket.on('setUserInfo', (info) => {
+  socket.on('setUserInfo', (infoJson) => {
+    const info = JSON.parse(infoJson);
     if (typeof info !== 'object' || info === null) {
       console.log(`${socket.id} - Invalid user info received`);
       return;
@@ -78,7 +79,7 @@ io.on("connection", (socket) => {
     userInfo.uid = info.uid.trim();
 
     users.set(socket.id, userInfo);
-    io.to(socket.id).emit('setUserInfo', userInfo);
+    io.to(socket.id).emit('setUserInfo', infoJson);
     console.log(`${socket.id} - setUserInfo`, userInfo);
   });
 
