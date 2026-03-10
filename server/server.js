@@ -29,37 +29,62 @@ app.get("/", (req, res) => {
 // const userRooms = new Map(); // Map to store socket.id -> current room
 
 const rooms = new Map(); // Map to store room data: { members: [socket.id], networkControllerIds: Map(socket.id -> networkControllerId), nextNetworkControllerId: number }
-const nicknames = new Map(); // Map to store socket.id -> nickname mappings
-const avatarGuids = new Map(); // Map to store socket.id -> avatarGuid mappings
+// const nicknames = new Map(); // Map to store socket.id -> nickname mappings [DEPRECATED - now stored in users Map]
+// const avatarGuids = new Map(); // Map to store socket.id -> avatarGuid mappings [DEPRECATED - now stored in users Map]
+const users = new Map(); // Map to store socket.id -> user data (nickname, avatarGuid, etc.)
 const userRooms = new Map(); // Map to store socket.id -> current room
 
 io.on("connection", (socket) => {
   console.log('User connected to game server: ', socket.id);
 
-  // Handle nickname setup
-  socket.on('setNickname', (nickname) => {
-    if (typeof nickname === 'string' && nickname.trim()) {
-      nicknames.set(socket.id, nickname.trim());
-      io.to(socket.id).emit('setNickname', nickname.trim());
-      console.log(`${socket.id} - setNickname ${nickname}`);
-    } else {
-      console.log(`${socket.id} - Invalid nickname received`);
-    }
-  });
+  // Handle nickname setup [DEPRECATED - now handled in setUserInfo event]
+  // socket.on('setNickname', (nickname) => {
+  //   if (typeof nickname === 'string' && nickname.trim()) {
+  //     nicknames.set(socket.id, nickname.trim());
+  //     io.to(socket.id).emit('setNickname', nickname.trim());
+  //     console.log(`${socket.id} - setNickname ${nickname}`);
+  //   } else {
+  //     console.log(`${socket.id} - Invalid nickname received`);
+  //   }
+  // });
+  
+  // Handle avatar setup [DEPRECATED - now handled in setUserInfo event]
+  // socket.on('setAvatar', (avatarGuid) => {
+  //   if (typeof avatarGuid === 'string' && avatarGuid.trim()) {
+  //     avatarGuids.set(socket.id, avatarGuid.trim());
+  //     io.to(socket.id).emit('setAvatar', avatarGuid.trim());
+  //     console.log(`${socket.id} - setAvatar ${avatarGuid}`);
+  //   } else {
+  //     console.log(`${socket.id} - Invalid avatarGuid received`);
+  //   }
+  // });
 
-  // Handle avatar setup
-  socket.on('setAvatar', (avatarGuid) => {
-    if (typeof avatarGuid === 'string' && avatarGuid.trim()) {
-      avatarGuids.set(socket.id, avatarGuid.trim());
-      io.to(socket.id).emit('setAvatar', avatarGuid.trim());
-      console.log(`${socket.id} - setAvatar ${avatarGuid}`);
-    } else {
-      console.log(`${socket.id} - Invalid avatarGuid received`);
+  socket.on('setUserInfo', (info) => {
+    if (typeof info !== 'object' || info === null) {
+      console.log(`${socket.id} - Invalid user info received`);
+      return;
     }
+    if (info.nickname === null || info.nickname === undefined || typeof info.nickname !== 'string' || !info.nickname.trim() ||
+        info.avatarGuid === null || info.avatarGuid === undefined || typeof info.avatarGuid !== 'string' || !info.avatarGuid.trim() ||
+        info.uid === null || info.uid === undefined || typeof info.uid !== 'string' || !info.uid.trim()) {
+      console.log(`${socket.id} - Invalid user info received`);
+      return;
+    }
+
+    let userInfo = users.get(socket.id) || {};
+
+    userInfo.nickname = info.nickname.trim();
+    userInfo.avatarGuid = info.avatarGuid.trim();
+    userInfo.uid = info.uid.trim();
+
+    users.set(socket.id, userInfo);
+    io.to(socket.id).emit('setUserInfo', userInfo);
+    console.log(`${socket.id} - setUserInfo`, userInfo);
   });
 
   socket.on('join-room', (room) => {
-    console.log(`${socket.id}:${nicknames.get(socket.id)} wants to join room ${room}`);
+    //console.log(`${socket.id}:${nicknames.get(socket.id)} wants to join room ${room}`);
+    console.log(`${socket.id}:${users.get(socket.id)?.nickname || 'Unknown'} wants to join room ${room}`);
     
     // Leave any previous room
     const currentRoom = userRooms.get(socket.id);
@@ -72,12 +97,12 @@ io.on("connection", (socket) => {
         // Emit room-member-left to the previous room (excluding the leaving user)
         socket.to(currentRoom).emit('room-member-left', {
           socketId: socket.id,
-          nickname: nicknames.get(socket.id) || 'Unknown'
+          nickname: users.get(socket.id)?.nickname || "Unknown" //nicknames.get(socket.id) || 'Unknown'
         });
         // Emit update-room-members to all clients in the previous room
         const memberData = roomData.members.map((id) => ({
           socketId: id,
-          nickname: nicknames.get(id) || 'Unknown',
+          nickname: users.get(id)?.nickname || "Unknown", //nicknames.get(id) || 'Unknown',
           avatarGuid: avatarGuids.get(id) || null,
           networkControllerId: roomData.networkControllerIds.get(id)
         }));
@@ -119,7 +144,7 @@ io.on("connection", (socket) => {
     // Emit room-member-join to the room (excluding the joining user)
     socket.to(room).emit('room-member-join', {
       socketId: socket.id,
-      nickname: nicknames.get(socket.id) || 'Unknown',
+      nickname: users.get(socket.id)?.nickname || "Unknown", //nicknames.get(socket.id) || 'Unknown'
       avatarGuid: avatarGuids.get(socket.id) || null,
       networkControllerId: networkControllerId
     });
@@ -130,7 +155,7 @@ io.on("connection", (socket) => {
     // Emit update-room-members to all clients in the room
     const memberData = roomData.members.map((id) => ({
       socketId: id,
-      nickname: nicknames.get(id) || 'Unknown',
+      nickname: users.get(id)?.nickname || "Unknown", //nicknames.get(id) || 'Unknown',
       avatarGuid: avatarGuids.get(id) || null,
       networkControllerId: roomData.networkControllerIds.get(id)
     }));
@@ -212,10 +237,12 @@ io.on("connection", (socket) => {
     // Broadcast message to all connected clients
     if (room === '') {
       console.log('broadcast msg to all');
-      io.emit('message', socket.id, nicknames.get(socket.id), msg);
+      //io.emit('message', socket.id, nicknames.get(socket.id), msg);
+      io.emit('message', socket.id, users.get(socket.id)?.nickname || 'Unknown', msg);
     } else {
       console.log('send msg to room members');
-      io.to(room).emit('message', socket.id, nicknames.get(socket.id), msg);
+      //io.to(room).emit('message', socket.id, nicknames.get(socket.id), msg);
+      io.to(room).emit('message', socket.id, users.get(socket.id)?.nickname || 'Unknown', msg);
       // io.to(socket.id).emit('message', socket.id, nicknames.get(socket.id), msg);
     }
   });
@@ -231,7 +258,8 @@ io.on("connection", (socket) => {
     if (room === '') {
     } else {
       console.log('send broadcast-data to room members');
-      io.to(room).emit('broadcast-data', socket.id, nicknames.get(socket.id), param);
+      //io.to(room).emit('broadcast-data', socket.id, nicknames.get(socket.id), param);
+      io.to(room).emit('broadcast-data', socket.id, users.get(socket.id)?.nickname || 'Unknown', param);
     }
   });
 
@@ -280,12 +308,14 @@ io.on("connection", (socket) => {
         // Emit room-member-left to the room
         io.to(room).emit('room-member-left', {
           socketId: socket.id,
-          nickname: nicknames.get(socket.id) || 'Unknown'
+          //nickname: nicknames.get(socket.id) || 'Unknown'
+          nickname: users.get(socket.id)?.nickname || "Unknown"
         });
         // Emit update-room-members to all clients in the room
         const memberData = roomData.members.map((id) => ({
           socketId: id,
-          nickname: nicknames.get(id) || 'Unknown',
+          //nickname: nicknames.get(id) || 'Unknown',
+          nickname: users.get(id)?.nickname || "Unknown",
           avatarGuid: avatarGuids.get(id) || null,
           networkControllerId: roomData.networkControllerIds.get(id)
         }));
@@ -299,6 +329,7 @@ io.on("connection", (socket) => {
     // Clean up user data
     userRooms.delete(socket.id);
     nicknames.delete(socket.id);
+    users.delete(socket.id);
     avatarGuids.delete(socket.id);
   });
   
