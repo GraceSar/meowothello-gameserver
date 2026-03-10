@@ -335,9 +335,9 @@ io.on("connection", (socket) => {
 
     // Clean up user data
     userRooms.delete(socket.id);
-    nicknames.delete(socket.id);
+    // nicknames.delete(socket.id);
+    // avatarGuids.delete(socket.id);
     users.delete(socket.id);
-    avatarGuids.delete(socket.id);
   });
   
   /*
