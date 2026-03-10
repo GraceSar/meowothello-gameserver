@@ -146,8 +146,9 @@ io.on("connection", (socket) => {
     // Emit room-member-join to the room (excluding the joining user)
     socket.to(room).emit('room-member-join', {
       socketId: socket.id,
-      nickname: users.get(socket.id)?.nickname || "Unknown", //nicknames.get(socket.id) || 'Unknown'
-      avatarGuid: users.get(socket.id)?.avatarGuid || "", // avatarGuids.get(socket.id) || null,
+      // nickname: users.get(socket.id)?.nickname || "Unknown", //nicknames.get(socket.id) || 'Unknown'
+      // avatarGuid: users.get(socket.id)?.avatarGuid || "", // avatarGuids.get(socket.id) || null,
+      userInfo: users.get(socket.id) || null,
       networkControllerId: networkControllerId
     });
 
