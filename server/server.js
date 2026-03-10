@@ -104,7 +104,7 @@ io.on("connection", (socket) => {
         const memberData = roomData.members.map((id) => ({
           socketId: id,
           nickname: users.get(id)?.nickname || "Unknown", //nicknames.get(id) || 'Unknown',
-          avatarGuid: avatarGuids.get(id) || null,
+          avatarGuid: users.get(id)?.avatarGuid || "", // avatarGuids.get(id) || null,
           networkControllerId: roomData.networkControllerIds.get(id)
         }));
         io.to(currentRoom).emit('update-room-members', currentRoom, memberData);
@@ -146,7 +146,7 @@ io.on("connection", (socket) => {
     socket.to(room).emit('room-member-join', {
       socketId: socket.id,
       nickname: users.get(socket.id)?.nickname || "Unknown", //nicknames.get(socket.id) || 'Unknown'
-      avatarGuid: avatarGuids.get(socket.id) || null,
+      avatarGuid: users.get(socket.id)?.avatarGuid || "", // avatarGuids.get(socket.id) || null,
       networkControllerId: networkControllerId
     });
 
@@ -157,7 +157,7 @@ io.on("connection", (socket) => {
     const memberData = roomData.members.map((id) => ({
       socketId: id,
       nickname: users.get(id)?.nickname || "Unknown", //nicknames.get(id) || 'Unknown',
-      avatarGuid: avatarGuids.get(id) || null,
+      avatarGuid: users.get(id)?.avatarGuid || "", // avatarGuids.get(id) || null,
       networkControllerId: roomData.networkControllerIds.get(id)
     }));
     io.to(room).emit('update-room-members', room, memberData);
