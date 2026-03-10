@@ -103,8 +103,9 @@ io.on("connection", (socket) => {
         // Emit update-room-members to all clients in the previous room
         const memberData = roomData.members.map((id) => ({
           socketId: id,
-          nickname: users.get(id)?.nickname || "Unknown", //nicknames.get(id) || 'Unknown',
-          avatarGuid: users.get(id)?.avatarGuid || "", // avatarGuids.get(id) || null,
+          // nickname: users.get(id)?.nickname || "Unknown", //nicknames.get(id) || 'Unknown',
+          // avatarGuid: users.get(id)?.avatarGuid || "", // avatarGuids.get(id) || null,
+          userInfo: users.get(id) || null,
           networkControllerId: roomData.networkControllerIds.get(id)
         }));
         io.to(currentRoom).emit('update-room-members', currentRoom, memberData);
@@ -156,8 +157,9 @@ io.on("connection", (socket) => {
     // Emit update-room-members to all clients in the room
     const memberData = roomData.members.map((id) => ({
       socketId: id,
-      nickname: users.get(id)?.nickname || "Unknown", //nicknames.get(id) || 'Unknown',
-      avatarGuid: users.get(id)?.avatarGuid || "", // avatarGuids.get(id) || null,
+      // nickname: users.get(id)?.nickname || "Unknown", //nicknames.get(id) || 'Unknown',
+      // avatarGuid: users.get(id)?.avatarGuid || "", // avatarGuids.get(id) || null,
+      userInfo: users.get(id) || null,
       networkControllerId: roomData.networkControllerIds.get(id)
     }));
     io.to(room).emit('update-room-members', room, memberData);
@@ -316,8 +318,9 @@ io.on("connection", (socket) => {
         const memberData = roomData.members.map((id) => ({
           socketId: id,
           //nickname: nicknames.get(id) || 'Unknown',
-          nickname: users.get(id)?.nickname || "Unknown",
-          avatarGuid: avatarGuids.get(id) || null,
+          // nickname: users.get(id)?.nickname || "Unknown",
+          // avatarGuid: avatarGuids.get(id) || null,
+          userInfo: users.get(id) || null,
           networkControllerId: roomData.networkControllerIds.get(id)
         }));
         io.to(room).emit('update-room-members', room, memberData);
