@@ -62,8 +62,9 @@ io.on("connection", (socket) => {
   //   }
   // });
 
-  socket.on('setUserInfo', (infoJson) => {
-    const info = JSON.parse(infoJson);
+  socket.on('setUserInfo', (info) => {
+    //const info = JSON.parse(infoJson);
+
     if (typeof info !== 'object' || info === null) {
       console.log(`${socket.id} - Invalid user info received`);
       return;
@@ -71,18 +72,18 @@ io.on("connection", (socket) => {
     if (info.nickname === null || info.nickname === undefined || typeof info.nickname !== 'string' || !info.nickname.trim() ||
         info.avatarGuid === null || info.avatarGuid === undefined || typeof info.avatarGuid !== 'string' || !info.avatarGuid.trim() ||
         info.uid === null || info.uid === undefined || typeof info.uid !== 'string' || !info.uid.trim()) {
-      console.log(`${socket.id} - Invalid user info received`);
+      console.log(`${socket.id} - Invalid user info field received`);
       return;
     }
 
-    let userInfo = users.get(socket.id) || {};
-
-    userInfo.nickname = info.nickname.trim();
-    userInfo.avatarGuid = info.avatarGuid.trim();
-    userInfo.uid = info.uid.trim();
+    // let userInfo = users.get(socket.id) || {};
+    // userInfo.nickname = info.nickname.trim();
+    // userInfo.avatarGuid = info.avatarGuid.trim();
+    // userInfo.uid = info.uid.trim();
+    const userInfo = info;
 
     users.set(socket.id, userInfo);
-    io.to(socket.id).emit('setUserInfo', infoJson);
+    io.to(socket.id).emit('setUserInfo', userInfo);
     console.log(`${socket.id} - setUserInfo`, userInfo);
   });
 
