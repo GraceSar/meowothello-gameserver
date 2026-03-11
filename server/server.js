@@ -37,6 +37,9 @@ const userRooms = new Map(); // Map to store socket.id -> current room
 io.on("connection", (socket) => {
   console.log('User connected to game server: ', socket.id);
 
+  // To let Unity handle this event on its main thread.
+  io.to(socket.id).emit('socketConnected', socket.id);
+
   // Handle nickname setup [DEPRECATED - now handled in setUserInfo event]
   // socket.on('setNickname', (nickname) => {
   //   if (typeof nickname === 'string' && nickname.trim()) {
